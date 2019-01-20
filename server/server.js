@@ -32,6 +32,8 @@ import serverConfig from './config';
 import appRoutes from './routes/app';
 import directoryRoutes from './routes/directory';
 import fileRoutes from './routes/file';
+import sharedDirectoryRoutes from './routes/sharedDirectory';
+import sharedFileRoutes from './routes/sharedFile';
 
 // Apply body Parser and server public assets and routes
 app.use(compression());
@@ -39,6 +41,8 @@ app.use(bodyParser.json({ limit: '20mb' }));
 app.use(bodyParser.urlencoded({ limit: '20mb', extended: true }));
 app.use(express.static(path.resolve(__dirname, '../dist/client')));
 app.use('/api', );
+app.use('/sharedDirectory', sharedDirectoryRoutes);
+app.use('/sharedFile', sharedFileRoutes);
 // To allow CORS
 /*app.use(function (req, res, next) {
     res.setHeader('Access-Control-Allow-Origin', '*');

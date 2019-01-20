@@ -3,12 +3,12 @@ import serverConfig from '../config';
 let path = require('path');
 let express = require('express');
 let router = express.Router();
-let User = require('../models/user');
-let bcrypt = require('bcryptjs');
+var Cryptr = require('cryptr'), cryptr = new Cryptr('secret');
 let jwt = require('jsonwebtoken');
 let fs = require('fs-extra');
 let multer = require('multer');
 let File = require('../models/file');
+var SharedFile = require('../models/sharedFile');
 
 /*
 * Session Authentication
@@ -30,13 +30,7 @@ router.use('/', function (req, res, next) {
 * */
 router.get('/', function (req, res, next) {
   let decoded = jwt.decode(req.query.token);
-  if (req.query.userId != decoded.user.email) {
-    return res.status(401).json({
-      title: 'Not Authenticated.',
-      error: {message: 'Users do not match.'},
-    });
-  }
-  File.findAll({where: {owner: req.query.userId, path: req.query.path}})
+  File.findAll({where: {owner: decoded.user.email, path: req.query.path}})
     .then((files) => {
       res.status(200).json({
         message: 'Files retrieved successfully.',
@@ -128,18 +122,81 @@ router.post('/', function (req, res, next) {
     });
   });
 });
-/*
+
 // Star a file
 router.patch('/star', function (req, res, next) {
-  var decoded = jwt.decode(req.query.token);
-  if (req.body.owner != decoded.user.email) {
-    return res.status(401).json({
-      title: 'Not Authenticated.',
-      error: {message: 'Users do not match.'},
+  let decoded = jwt.decode(req.query.token);
+  File.find({where: {id: req.body.id}})
+    .then((file) => {
+      if (file.owner != decoded.user.email) {
+        return res.status(401).json({
+          title: 'Not Authenticated.',
+          error: {message: 'Users do not match.'},
+        });
+      }
+      file.updateAttributes({
+        starred: true,
+      });
+      res.status(200).json({
+        message: 'File successfully starred.',
+        name: file.name,
+      });
+    })
+    .catch(() => {
+      res.status(404).json({
+        title: 'Cannot star file.',
+        error: {message: 'File not found.'},
+      });
     });
-  }
 });
-*/
+
+/*
+* Share a file
+* */
+router.patch('/share', function (req, res, next) {
+  let decoded = jwt.decode(req.query.token);
+  File.find({where: {id: req.body.id}})
+    .then((file) => {
+      if (file.owner != decoded.user.email) {
+        return res.status(401).json({
+          title: 'Not Authenticated.',
+          error: {message: 'Users do not match.'},
+        });
+      }
+      for (let i = 0, len = req.body.sharers.length; i < len; i++) {
+        let sharer = req.body.sharers[i];
+        SharedFile.findOrCreate({
+          where: {
+            name: req.body.name,
+            path: req.body.path,
+            owner: req.body.owner,
+            sharer: sharer,
+          },
+          defaults: {
+            path: cryptr.encrypt(req.body.path),
+            sharer: sharer,
+          },
+        }).spread((sharedFile, created) => {
+          if (created) {
+            console.log("Shared file created.");
+          }
+        });
+      }
+      file.updateAttributes({
+        shared: true,
+      });
+      res.status(200).json({
+        message: 'File successfully shared.',
+        name: file.name,
+      });
+    })
+    .catch(() => {
+      res.status(404).json({
+        title: 'Cannot share file.',
+        error: {message: 'File not found.'},
+      });
+    });
+})
 
 /*
 *Rename a file
