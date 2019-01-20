@@ -1,0 +1,21 @@
+# dropbox-prototype
+
+ It is a simple Dropbox replica. It uses NodeJS, ExpressJS, ReactJS & MySQL.
+
+ ## Quickstart
+
+ ```
+  git clone https://github.com/Nidhi2402/dropbox-prototype.git 
+  npm install
+  npm start
+```
+
+ **Note : Please make sure your MySQL is running.** Also `npm3` is required to install dependencies properly.
+
+ ## Available Commands
+
+ 1. `npm run start` - starts the development server with hot reloading enabled
+
+ 2. `npm run bs` - bundles the code and starts the production server
+
+ 3. `npm run test` - start the test runner

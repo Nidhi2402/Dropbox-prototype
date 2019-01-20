@@ -6,7 +6,11 @@
   ],
   "verbose": true,
   "watch": [
-    "./"
+    "server",
+    "Intl"
   ],
+  "env": {
+    "NODE_ENV": "development"
+  },
   "ext": "js json"
 }
