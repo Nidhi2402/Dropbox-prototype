@@ -13,7 +13,7 @@
 
  ## Commands
 
- #####1. Run the Server
+ #### 1. Run the Server
    ```
    cd server
    npm install
@@ -23,10 +23,11 @@
      - Server started @ 'localhost:8000'.
      - Make sure 'mysql' is running on your machine.
      
- #####2. Run the Client - localhost:3000
+ ##### 2. Run the Client - localhost:3000
     ```
     cd client
     npm install
     npm run start
     ```
-    - **Note :** Client started @ 'localhost:3000'.
+ - **Note :**
+     - Client started @ 'localhost:3000'.
