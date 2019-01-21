@@ -25,7 +25,11 @@ let Directory = sequelize.define('directory', {
     defaultValue: false,
   },
   link: {
-    type: Sequelize.STRING,
+    type: Sequelize.TEXT,
+  },
+  show: {
+    type: Sequelize.BOOLEAN,
+    defaultValue: false,
   },
 });
 

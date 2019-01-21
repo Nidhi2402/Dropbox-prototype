@@ -6,7 +6,6 @@ let router = express.Router();
 let Cryptr = require('cryptr'), cryptr = new Cryptr('secret');
 let jwt = require('jsonwebtoken');
 let fs = require('fs-extra');
-let multer = require('multer');
 let SharedFile = require('../models/sharedFile');
 
 /*

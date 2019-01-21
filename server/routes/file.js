@@ -1,15 +1,16 @@
 import serverConfig from '../config';
 
+import Activity from "../models/activity";
+
 let path = require('path');
 let express = require('express');
 let router = express.Router();
-var Cryptr = require('cryptr'), cryptr = new Cryptr('secret');
+let Cryptr = require('cryptr'), cryptr = new Cryptr('secret');
 let jwt = require('jsonwebtoken');
 let fs = require('fs-extra');
 let multer = require('multer');
 let File = require('../models/file');
-var SharedFile = require('../models/sharedFile');
-
+let SharedFile = require('../models/sharedFile');
 /*
 * Session Authentication
 * */
@@ -45,7 +46,51 @@ router.get('/', function (req, res, next) {
     });
 });
 
-// Download a file
+/*
+* Get a file from link
+* */
+router.get('/link/:path/:fileName', function (req, res, next) {
+  res.download(path.resolve(serverConfig.box.path, cryptr.decrypt(req.params.path), req.params.fileName), req.params.fileName, function (err) {
+    if (err) {
+      console.log("File download failed.");
+    } else {
+      console.log("File downloaded successfully.");
+    }
+  });
+});
+
+/*
+* Create a shareable link
+* */
+router.patch('/link', function (req, res, next) {
+  let decoded = jwt.decode(req.query.token);
+  File.find({where: {id: req.body.id}})
+    .then((file) => {
+      if (file.owner != decoded.user.email) {
+        return res.status(401).json({
+          title: 'Not Authenticated.',
+          error: {message: 'Users do not match.'},
+        });
+      }
+      file.updateAttributes({
+        link: path.join("localhost:8000", "file", "link", cryptr.encrypt(path.join(file.owner, file.path)), file.name),
+      });
+      res.status(200).json({
+        message: "File's shareable link successfully created.",
+        link: file.link,
+      });
+    })
+    .catch(() => {
+      res.status(404).json({
+        title: 'Cannot create shareable link.',
+        error: {message: 'File not found.'},
+      });
+    });
+});
+
+/*
+* Download a file
+* */
 router.get('/download', function (req, res, next) {
   let decoded = jwt.decode(req.query.token);
   if (req.query.userId != decoded.user.email) {
@@ -60,6 +105,23 @@ router.get('/download', function (req, res, next) {
       console.log("File download failed.");
     } else {
       console.log("File downloaded successfully.");
+      let activity = {
+        email: decoded.user.email,
+        log: "Downloaded " + req.query.name,
+      };
+      Activity.create(activity)
+        .then((activity) => {
+          console.log({
+            message: 'Activity successfully logged.',
+            log: activity.log,
+          });
+        })
+        .catch(() => {
+          console.log({
+            title: 'Activity cannot be logged.',
+            error: {message: 'Invalid Data.'},
+          });
+        });
     }
   });
 });
@@ -116,6 +178,23 @@ router.post('/', function (req, res, next) {
         console.error("Could not save file " + req.file.originalname + ". Error: " + error);
       });
     console.log("Uploaded file " + req.file.originalname);
+    let activity = {
+      email: decoded.user.email,
+      log: "Uploaded " + req.file.originalname,
+    };
+    Activity.create(activity)
+      .then((activity) => {
+        console.log({
+          message: 'Activity successfully logged.',
+          log: activity.log,
+        });
+      })
+      .catch(() => {
+        console.log({
+          title: 'Activity cannot be logged.',
+          error: {message: 'Invalid Data.'},
+        });
+      });
     res.status(201).json({
       message: 'File successfully uploaded.',
       name: req.file.originalname,
@@ -123,7 +202,9 @@ router.post('/', function (req, res, next) {
   });
 });
 
-// Star a file
+/*
+* Star a file
+* */
 router.patch('/star', function (req, res, next) {
   let decoded = jwt.decode(req.query.token);
   File.find({where: {id: req.body.id}})
@@ -137,6 +218,23 @@ router.patch('/star', function (req, res, next) {
       file.updateAttributes({
         starred: true,
       });
+      let activity = {
+        email: decoded.user.email,
+        log: "Starred " + file.name,
+      };
+      Activity.create(activity)
+        .then((activity) => {
+          console.log({
+            message: 'Activity successfully logged.',
+            log: activity.log,
+          });
+        })
+        .catch(() => {
+          console.log({
+            title: 'Activity cannot be logged.',
+            error: {message: 'Invalid Data.'},
+          });
+        });
       res.status(200).json({
         message: 'File successfully starred.',
         name: file.name,
@@ -171,6 +269,7 @@ router.patch('/share', function (req, res, next) {
             path: req.body.path,
             owner: req.body.owner,
             sharer: sharer,
+            show: true,
           },
           defaults: {
             path: cryptr.encrypt(req.body.path),
@@ -184,6 +283,7 @@ router.patch('/share', function (req, res, next) {
       }
       file.updateAttributes({
         shared: true,
+        show: true,
       });
       res.status(200).json({
         message: 'File successfully shared.',
@@ -199,7 +299,7 @@ router.patch('/share', function (req, res, next) {
 })
 
 /*
-*Rename a file
+* Rename a file
 * */
 router.patch('/', function (req, res, next) {
   let decoded = jwt.decode(req.query.token);
@@ -274,6 +374,23 @@ router.delete('/', function (req, res, next) {
               .then(() => {
                 File.destroy({where: {name: req.body.name, path: req.body.path, owner: req.body.owner}});
                 console.log("Deleted file " + req.body.name);
+                let activity = {
+                  email: decoded.user.email,
+                  log: "Deleted " + req.body.name,
+                };
+                Activity.create(activity)
+                  .then((activity) => {
+                    console.log({
+                      message: 'Activity successfully logged.',
+                      log: activity.log,
+                    });
+                  })
+                  .catch(() => {
+                    console.log({
+                      title: 'Activity cannot be logged.',
+                      error: {message: 'Invalid Data.'},
+                    });
+                  });
                 res.status(200).json({
                   message: 'File successfully deleted.',
                   name: req.body.name,

@@ -24,7 +24,11 @@ let SharedDirectory = sequelize.define('sharedDirectory', {
     type: Sequelize.STRING,
   },
   link: {
-    type: Sequelize.STRING,
+    type: Sequelize.TEXT,
+  },
+  show: {
+    type: Sequelize.BOOLEAN,
+    defaultValue: false,
   },
 });
 
