@@ -14,10 +14,10 @@
  ## Commands
 
  ######1. Run the Server
- ```
- cd server
- npm install
- npm run start
+   ```
+   cd server
+   npm install
+   npm run start
  ```
   - **Note :** 
      - Server started @ 'localhost:8000'.
