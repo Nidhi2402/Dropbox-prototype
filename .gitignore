@@ -4,4 +4,7 @@ npm-debug.log
 .idea/
 dump.rdb
 .vscode/
-public/javascripts/bundle.js
+/server/node_modules/
+/server/box/
+.editorconfig
+/client/node_modules/
