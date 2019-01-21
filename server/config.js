@@ -1,6 +1,7 @@
-import path from 'path';
+let path = require('path');
 const config = {
     port: process.env.PORT || 8000,
+  server:'localhost',
   database: {
     name: 'dropbox-prototype',
     username: 'root',
@@ -11,4 +12,4 @@ const config = {
   }
 };
 
-export default config;
+module.exports = config;

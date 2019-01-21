@@ -7,7 +7,7 @@
  ```
   git clone https://github.com/Nidhi2402/dropbox-prototype.git 
   npm install
-  npm start
+  npm run start
 ```
 
  **Note : Please make sure your MySQL is running and has a database named 'dropbox-prototype'.** Also `npm3` is required to install dependencies properly.
@@ -16,6 +16,4 @@
 
  1. `npm run start` - starts the development server with hot reloading enabled
 
- 2. `npm run bs` - bundles the code and starts the production server
-
- 3. `npm run test` - start the test runner
+ 2. `npm run test` - start the test runner

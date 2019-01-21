@@ -1,7 +1,5 @@
 let serverConfig = require('../config');
 
-import Activity from "../models/activity";
-
 let path = require('path');
 let express = require('express');
 let router = express.Router();
@@ -11,6 +9,8 @@ let fs = require('fs-extra');
 let multer = require('multer');
 let File = require('../models/file');
 let SharedFile = require('../models/sharedFile');
+let Activity = require('../models/activity');
+
 /*
 * Session Authentication
 * */
@@ -99,7 +99,6 @@ router.get('/download', function (req, res, next) {
       error: {message: 'Users do not match.'},
     });
   }
-  console.log(path.resolve(serverConfig.box.path, decoded.user.email, req.query.path, req.query.name));
   res.download(path.resolve(serverConfig.box.path, decoded.user.email, req.query.path, req.query.name), req.query.name, function (err) {
     if (err) {
       console.log("File download failed.");
@@ -142,7 +141,6 @@ router.post('/', function (req, res, next) {
   });
   let upload = multer({storage: storage, limits: {fileSize: 1000000, files: 1}}).single('file');
   upload(req, res, function (error) {
-    console.log(req.body.owner + " " + decoded.user.email);
     if (req.body.owner != decoded.user.email) {
       return res.status(401).json({
         title: 'Not Authenticated.',
@@ -269,11 +267,11 @@ router.patch('/share', function (req, res, next) {
             path: req.body.path,
             owner: req.body.owner,
             sharer: sharer,
-            show: true,
           },
           defaults: {
             path: cryptr.encrypt(req.body.path),
             sharer: sharer,
+            show: true,
           },
         }).spread((sharedFile, created) => {
           if (created) {
@@ -297,6 +295,7 @@ router.patch('/share', function (req, res, next) {
       });
     });
 })
+;
 
 /*
 * Rename a file

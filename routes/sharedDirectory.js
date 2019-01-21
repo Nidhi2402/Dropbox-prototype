@@ -8,9 +8,7 @@ let jwt = require('jsonwebtoken');
 let fs = require('fs-extra');
 let SharedDirectory = require('../models/sharedDirectory');
 
-/*
-* Session Authentication
-* */
+// Session Authentication
 router.use('/', function (req, res, next) {
   jwt.verify(req.query.token, 'secret', function (error, decoded) {
     if (error) {
@@ -23,9 +21,7 @@ router.use('/', function (req, res, next) {
   });
 });
 
-/*
-* List all shared directories
-* */
+// List all shared directories
 router.get('/list', function (req, res, next) {
   let decoded = jwt.decode(req.query.token);
   SharedDirectory.findAll({where: {sharer: decoded.user.email}})
@@ -43,9 +39,7 @@ router.get('/list', function (req, res, next) {
     });
 });
 
-/*
-* Get all shared directories
-* */
+// Get all shared directories
 router.get('/', function (req, res, next) {
   let decoded = jwt.decode(req.query.token);
   SharedDirectory.findAll({where: {sharer: decoded.user.email, path: req.query.path}})
@@ -63,9 +57,7 @@ router.get('/', function (req, res, next) {
     });
 });
 
-/*
-*Download a shared directory
-* */
+// Download a shared directory
 router.post('/download', function (req, res, next) {
   let decoded = jwt.decode(req.query.token);
   SharedDirectory.find({where: {sharer: decoded.user.email, owner: req.body.owner, path: req.body.path, name: req.body.name}})
@@ -100,9 +92,7 @@ router.post('/download', function (req, res, next) {
     });
 });
 
-/*
-* Star a shared directory
-* */
+// Star a shared directory
 router.patch('/star', function (req, res, next) {
   let decoded = jwt.decode(req.query.token);
   SharedDirectory.find({where: {id: req.body.id}})

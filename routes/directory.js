@@ -3,14 +3,14 @@ let serverConfig = require('../config');
 let path = require('path');
 let express = require('express');
 let router = express.Router();
-var Cryptr = require('cryptr'), cryptr = new Cryptr('secret');
+let Cryptr = require('cryptr'), cryptr = new Cryptr('secret');
 let jwt = require('jsonwebtoken');
 let fs = require('fs-extra');
 let Directory = require('../models/directory');
-let zipFolder = require('zip-folder');
 let SharedDirectory = require('../models/sharedDirectory');
 let File = require('../models/file');
 let SharedFile = require('../models/sharedFile');
+let zipFolder = require('zip-folder');
 
 /*
 * Session Authentication
@@ -38,7 +38,6 @@ router.get('/download', function (req, res, next) {
       error: {message: 'Users do not match.'},
     });
   }
-  console.log(path.resolve(serverConfig.box.path, decoded.user.email, req.query.path, req.query.name));
   zipFolder(path.resolve(serverConfig.box.path, decoded.user.email, req.query.path, req.query.name), path.resolve(serverConfig.box.path, decoded.user.email, 'tmp', req.query.name) + '.zip', function (error) {
     if (error) {
       console.log("Directory cannot be zipped. " + error);
@@ -84,12 +83,6 @@ router.get('/download', function (req, res, next) {
 * */
 router.get('/', function (req, res, next) {
   let decoded = jwt.decode(req.query.token);
-  if (req.query.userId != decoded.user.email) {
-    return res.status(401).json({
-      title: 'Not Authenticated.',
-      error: {message: 'Users do not match.'},
-    });
-  }
   Directory.findAll({where: {owner: decoded.user.email, path: req.query.path}})
     .then((directories) => {
       res.status(200).json({
@@ -331,7 +324,7 @@ router.patch('/share', function (req, res, next) {
               data: files,
             });
             if (files != null && files.length > 0) {
-              let moreFiles = true;
+              moreFiles = true;
               for (let i = 0, len = files.length; i < len; i++) {
                 //shareFile
                 File.find({where: {id: files[i].id}})
@@ -429,7 +422,7 @@ router.patch('/share', function (req, res, next) {
       error: {message: 'Internal server error.'},
     });
   }
-})
+});
 
 /*
 * Rename a directory
