@@ -160,7 +160,7 @@ router.post('/', function (req, res, next) {
     File.findOrCreate({
       where: {
         name: req.file.originalname,
-        path: req.body.path,
+        path: path.join('root',req.body.path),
         owner: req.body.owner,
       },
     })
@@ -170,7 +170,7 @@ router.post('/', function (req, res, next) {
       .catch((error) => {
         console.error("Cannot create file. Error: " + error);
       });
-    fs.move(path.resolve(serverConfig.box.path, decoded.user.email, 'tmp', req.file.originalname), path.resolve(serverConfig.box.path, decoded.user.email, req.body.path, req.file.originalname), {overwrite: true})
+    fs.move(path.resolve(serverConfig.box.path, decoded.user.email, 'tmp', req.file.originalname), path.resolve(serverConfig.box.path, decoded.user.email, path.join('root',req.body.path), req.file.originalname), {overwrite: true})
       .then(() => {
         console.log("Saved file " + req.file.originalname);
       })
@@ -367,12 +367,13 @@ router.delete('/', function (req, res, next) {
           error: {message: 'Users do not match.'},
         });
       }
+      console.log(path.resolve(serverConfig.box.path, decoded.user.email, req.body.path, req.body.name));
       fs.pathExists(path.resolve(serverConfig.box.path, decoded.user.email, req.body.path, req.body.name))
         .then((exists) => {
           if (exists) {
             fs.remove(path.resolve(serverConfig.box.path, decoded.user.email, req.body.path, req.body.name))
               .then(() => {
-                File.destroy({where: {name: req.body.name, path: req.body.path, owner: req.body.owner}});
+                File.destroy({where: {name: req.body.name, path: req.body.path, owner: file.owner}});
                 console.log("Deleted file " + req.body.name);
                 let activity = {
                   email: decoded.user.email,

@@ -7,6 +7,7 @@ var Cryptr = require('cryptr'), cryptr = new Cryptr('secret');
 let jwt = require('jsonwebtoken');
 let fs = require('fs-extra');
 let Directory = require('../models/directory');
+let Activity = require('../models/activity');
 let zipFolder = require('zip-folder');
 let SharedDirectory = require('../models/sharedDirectory');
 let File = require('../models/file');
@@ -177,7 +178,7 @@ router.put('/', function (req, res, next) {
   let index = 0;
   do {
     directoryExists = false;
-    if (fs.pathExistsSync(path.resolve(serverConfig.box.path, decoded.user.email, req.body.path, directoryName))) {
+    if (fs.pathExistsSync(path.resolve(serverConfig.box.path, decoded.user.email, path.join('root', req.body.path), directoryName))) {
       ++index;
       directoryName = req.body.name + " (" + index + ")";
       directoryExists = true;
@@ -185,12 +186,12 @@ router.put('/', function (req, res, next) {
   } while (directoryExists);
   let directory = {
     name: directoryName,
-    path: req.body.path,
+    path: path.join('root', req.body.path),
     owner: req.body.owner,
   };
 
   if (!directoryExists) {
-    fs.ensureDir(path.resolve(serverConfig.box.path, decoded.user.email, req.body.path, directory.name))
+    fs.ensureDir(path.resolve(serverConfig.box.path, decoded.user.email, path.join('root', req.body.path), directory.name))
       .then(() => {
         console.log("Created directory " + directory.name);
         Directory.create(directory)
@@ -248,7 +249,7 @@ router.patch('/star', function (req, res, next) {
         });
       }
       directory.updateAttributes({
-        starred: true,
+        starred: req.body.starred,
       });
       let activity = {
         email: decoded.user.email,
@@ -506,7 +507,7 @@ router.delete('/', function (req, res, next) {
           if (exists) {
             fs.remove(path.resolve(serverConfig.box.path, decoded.user.email, req.body.path, req.body.name))
               .then(() => {
-                Directory.destroy({where: {name: req.body.name, path: req.body.path, owner: req.body.owner}});
+                Directory.destroy({where: {name: req.body.name, path: req.body.path, owner: directory.owner}});
                 console.log("Deleted directory " + req.body.name);
                 let activity = {
                   email: decoded.user.email,

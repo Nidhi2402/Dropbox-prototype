@@ -8,7 +8,7 @@ const config = {
     password: 'root',
   },
   box:{
-    path: path.resolve(__dirname, '../box')
+    path: path.resolve(__dirname, './box')
   }
 };
 
