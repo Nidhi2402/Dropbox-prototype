@@ -118,7 +118,7 @@ router.use('/', function (req, res, next) {
 * */
 
 
-router.get('/', function (req, res, next) {
+router.get('/search', function (req, res, next) {
     User.find({
       attributes: ['firstName', 'lastName', 'email'],
       where: {email: req.params.userId}})

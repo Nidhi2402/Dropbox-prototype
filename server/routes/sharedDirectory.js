@@ -28,7 +28,7 @@ router.use('/', function (req, res, next) {
 * */
 router.get('/list', function (req, res, next) {
   let decoded = jwt.decode(req.query.token);
-  SharedDirectory.findAll({where: {sharer: decoded.user.email}})
+  SharedDirectory.findAll({where: {sharer: decoded.user.email, show: true}})
     .then((sharedDirectories) => {
       res.status(200).json({
         message: 'Shared directories list retrieved successfully.',
@@ -48,7 +48,7 @@ router.get('/list', function (req, res, next) {
 * */
 router.get('/', function (req, res, next) {
   let decoded = jwt.decode(req.query.token);
-  SharedDirectory.findAll({where: {sharer: decoded.user.email, path: req.query.path}})
+  SharedDirectory.findAll({where: {sharer: decoded.user.email, path: cryptr.encrypt(path.join(cryptr.decrypt(req.query.path),req.query.name))}})
     .then((sharedDirectories) => {
       res.status(200).json({
         message: 'Shared directories retrieved successfully.',

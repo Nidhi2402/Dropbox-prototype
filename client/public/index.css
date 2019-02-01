@@ -10,7 +10,12 @@ html, body {
   display: inline-block;
   margin-top: 40px;
   margin-bottom: 25px;
-  margin-left: 15px;
+}
+
+.back-arrow{
+  margin-bottom: -17px;
+  font-weight: bold;
+  margin-left: -8px;
 }
 #dropbox-logo {
   z-index: 4;
@@ -194,8 +199,11 @@ html, body {
 .text-icon-secondary {
   color: #3ba0f3;
 }
+.share-icon{
+  margin-bottom: -12px;
+}
 
-.directory-div, .file-div {
+.directory-div, .file-div, .activity-div {
   padding: 0 20px 0 20px;
 }
 

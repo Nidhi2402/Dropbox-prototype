@@ -14,6 +14,32 @@ let File = require('../models/file');
 let SharedFile = require('../models/sharedFile');
 
 /*
+* Get Directory from the Link
+ * */
+router.get('/link/:path/:directoryName', function (req, res, next) {
+  zipFolder(path.resolve(serverConfig.box.path, cryptr.decrypt(req.params.path), req.params.directoryName), path.resolve(serverConfig.box.path, cryptr.decrypt(req.params.path).split(path.sep)[0], 'tmp', req.params.directoryName) + '.zip', function (error) {
+    if (error) {
+      console.log("Directory cannot be zipped. " + error);
+    } else {
+      console.log('Directory zipped successfully.');
+      res.download(path.resolve(serverConfig.box.path, cryptr.decrypt(req.params.path).split(path.sep)[0], 'tmp', req.params.directoryName) + '.zip', req.params.directoryName + '.zip', function (err) {
+        if (err) {
+          console.log("Directory download failed.");
+        } else {
+          fs.remove(path.resolve(serverConfig.box.path, cryptr.decrypt(req.params.path).split(path.sep)[0], 'tmp', req.params.directoryName) + '.zip')
+            .then(() => {
+              console.log("Deleted zipped directory.");
+            })
+            .catch(() => {
+              console.log("Cannot delete zipped directory.");
+            });
+          console.log("Directory downloaded successfully.");
+        }
+      });
+    }
+  });
+});
+/*
 * Session Authentication
 * */
 router.use('/', function (req, res, next) {
@@ -107,30 +133,23 @@ router.get('/', function (req, res, next) {
 });
 
 /*
-* Get a directory from link
+* Get all starred directories
 * */
-router.get('/link/:path/:directoryName', function (req, res, next) {
-  zipFolder(path.resolve(serverConfig.box.path, cryptr.decrypt(req.params.path), req.params.directoryName), path.resolve(serverConfig.box.path, cryptr.decrypt(req.params.path).split(path.sep)[0], 'tmp', req.params.directoryName) + '.zip', function (error) {
-    if (error) {
-      console.log("Directory cannot be zipped. " + error);
-    } else {
-      console.log('Directory zipped successfully.');
-      res.download(path.resolve(serverConfig.box.path, cryptr.decrypt(req.params.path).split(path.sep)[0], 'tmp', req.params.directoryName) + '.zip', req.params.directoryName + '.zip', function (err) {
-        if (err) {
-          console.log("Directory download failed.");
-        } else {
-          fs.remove(path.resolve(serverConfig.box.path, cryptr.decrypt(req.params.path).split(path.sep)[0], 'tmp', req.params.directoryName) + '.zip')
-            .then(() => {
-              console.log("Deleted zipped directory.");
-            })
-            .catch(() => {
-              console.log("Cannot delete zipped directory.");
-            });
-          console.log("Directory downloaded successfully.");
-        }
+router.get('/starred', function (req, res, next) {
+  let decoded = jwt.decode(req.query.token);
+  Directory.findAll({where: {owner: decoded.user.email, starred: true}})
+    .then((directories) => {
+      res.status(200).json({
+        message: 'Directories retrieved successfully.',
+        data: directories,
       });
-    }
-  });
+    })
+    .catch(() => {
+      res.status(500).json({
+        title: 'Cannot retrieve directories.',
+        error: {message: 'Internal server error.'},
+      });
+    });
 });
 
 /*
@@ -253,7 +272,7 @@ router.patch('/star', function (req, res, next) {
       });
       let activity = {
         email: decoded.user.email,
-        log: "Starred " + directory.name,
+        log: "Toggled Star for " + directory.name,
       };
       Activity.create(activity)
         .then((activity) => {
@@ -446,10 +465,10 @@ router.patch('/', function (req, res, next) {
           error: {message: 'Users do not match.'},
         });
       }
-      fs.pathExists(path.resolve(serverConfig.box.path, decoded.user.email, req.body.path, directory.name))
+      fs.pathExists(path.resolve(serverConfig.box.path, directory.owner, req.body.path, directory.name))
         .then((exists) => {
           if (exists) {
-            fs.rename(path.resolve(serverConfig.box.path, decoded.user.email, req.body.path, directory.name), path.resolve(serverConfig.box.path, decoded.user.email, req.body.path, req.body.name))
+            fs.rename(path.resolve(serverConfig.box.path, directory.owner, req.body.path, directory.name), path.resolve(serverConfig.box.path, directory.owner, req.body.path, req.body.name))
               .then(() => {
                 directory.updateAttributes({
                   name: req.body.name,
@@ -502,10 +521,10 @@ router.delete('/', function (req, res, next) {
           error: {message: 'Users do not match.'},
         });
       }
-      fs.pathExists(path.resolve(serverConfig.box.path, decoded.user.email, req.body.path, req.body.name))
+      fs.pathExists(path.resolve(serverConfig.box.path, directory.owner, req.body.path, req.body.name))
         .then((exists) => {
           if (exists) {
-            fs.remove(path.resolve(serverConfig.box.path, decoded.user.email, req.body.path, req.body.name))
+            fs.remove(path.resolve(serverConfig.box.path, directory.owner, req.body.path, req.body.name))
               .then(() => {
                 Directory.destroy({where: {name: req.body.name, path: req.body.path, owner: directory.owner}});
                 console.log("Deleted directory " + req.body.name);

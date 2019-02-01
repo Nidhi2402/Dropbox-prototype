@@ -19,8 +19,10 @@ class Content extends Component {
   componentWillReceiveProps(nextProps, nextState) {
     if (nextProps.user.status !== 'authenticated' || !nextProps.user.userId || nextProps.user.error) {
       this.props.history.push('/login');
-    else if (this.props.board !== nextProps.board || this.props.content !== nextProps.content) {
+    else
+      if (this.props.board !== nextProps.board || this.props.content !== nextProps.content) {
         this.props.history.push('/');
+      }
     }
   }
 
@@ -33,9 +35,6 @@ class Content extends Component {
   }
 
   render() {
-    //const {handleSignout} = this.props;
-      console.log(this.props.content.files);
-      console.log(this.props.content.directories);
     return (
       <div className="col-9" id="main-content-left">
         <div id="files-head">
@@ -57,7 +56,7 @@ class Content extends Component {
       </div>
     );
   }
-}
+
 
 function mapDispatchToProps(dispatch) {
   return {
